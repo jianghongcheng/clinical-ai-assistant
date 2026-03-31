@@ -34,6 +34,9 @@
 │  RAG Pipeline                           │
 │  Qdrant · Multi-Query · Reranker        │
 ├─────────────────────────────────────────┤
+│  GraphRAG Knowledge Graph               │
+│  39 nodes · 50 edges · GPT-4o-mini      │
+├─────────────────────────────────────────┤
 │  LLM Monitoring                         │
 │  Hallucination · Drift · Latency · Logs │
 └─────────────────────────────────────────┘
@@ -53,65 +56,56 @@
 | API | P95 Latency | 2593ms |
 | Fine-tuning | Training Loss | 5.66 → **3.98** |
 | Fine-tuning | Trainable Params | **0.28%** (4.36M/1.55B) |
+| GraphRAG | Knowledge Graph | **39 nodes / 50 edges** |
 
 ---
 
 ## Components
 
-### 1. React Frontend (`frontend/`)
-- Single-page app with chat interface, PDF upload, live metrics dashboard
-- Suggestion buttons for quick queries
-- Real-time guardrails status and faithfulness scores
-
-### 2. RAG Pipeline (`rag/`)
+### 1. RAG Pipeline (`rag/`)
 - Multi-query rewriting: 3 search variants per question
 - Qdrant vector DB with `all-MiniLM-L6-v2` embeddings
 - Cross-encoder reranking: `ms-marco-MiniLM-L-6-v2`
-- RAGAS evaluation framework
+- RAGAS evaluation: Faithfulness 0.84 / Relevancy 0.98 / Recall 1.00
 
-### 3. Multi-Agent System (`agents/`)
+### 2. Multi-Agent System (`agents/`)
 - 4-node LangGraph DAG: RAG → Draft → Critique → Synthesis
 - Self-correction loop with factuality validation
-- Full conversation state management
 
-### 4. QLoRA Fine-tuning (`finetune/`)
+### 3. QLoRA Fine-tuning (`finetune/`)
 - Base: Qwen2.5-1.5B-Instruct
 - QLoRA 4-bit NF4, LoRA r=16
-- 50 domain instruction pairs, RTX 3090
+- Training loss 5.66→3.98, 0.28% trainable params, RTX 3090
 
-### 5. LLM Monitoring (`monitoring/`)
+### 4. LLM Monitoring (`monitoring/`)
 - Hallucination detection (LLM-as-judge)
-- Retrieval drift detection
-- SQLite persistent logging with alerts
+- Retrieval drift detection with baseline comparison
+- SQLite persistent logging with automated alerts
+- Avg latency 1853ms, P95 2593ms
 
-### 6. GraphRAG (`graph/`)
-- GPT-4o-mini entity extraction
-- NetworkX graph: 39 nodes, 50 edges
+### 5. GraphRAG (`graph/`)
+- GPT-4o-mini entity and relation extraction
+- NetworkX directed graph: 39 nodes, 50 edges
 - Multi-hop cross-document queries
 
-### 7. LLM Guardrails (`guardrails/`)
+### 6. LLM Guardrails (`guardrails/`)
 - Input: Prompt injection, PII anonymization (Presidio), topic filter
 - Output: Hallucination filter, answer quality check
-- 7-layer pipeline
+- 7-layer pipeline, 100% injection block rate
+
+### 7. REST API + React Frontend (`api/`, `frontend/`)
+- FastAPI with 4 endpoints
+- React UI with PDF upload, chat interface, live metrics
+- Swagger docs at `/docs`
 
 ---
 
 ## Quick Start
 ```bash
-# Install dependencies
 pip install -r requirements.txt
-
-# Set environment variables
-cp .env.example .env
-# Add OPENAI_API_KEY to .env
-
-# Start vector database
+cp .env.example .env  # Add OPENAI_API_KEY
 docker run -d -p 6333:6333 qdrant/qdrant
-
-# Index research papers
 python rag/my_papers_data.py
-
-# Start API + Frontend
 python api/research_api.py
 # Open http://localhost:8000
 ```
@@ -134,7 +128,6 @@ python api/research_api.py
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 18, Vanilla JS |
 | LLM | GPT-4o-mini |
 | Agent Framework | LangGraph 1.1 |
 | Vector DB | Qdrant |
