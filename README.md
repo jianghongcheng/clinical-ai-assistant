@@ -1,85 +1,141 @@
-# LLM Research Assistant
+# Clinical AI Research Assistant
 
-> Production-grade LLM pipeline built on published research in hyperspectral imaging and image super-resolution.
-> **PhD, ECE, UMKC** | CVPR / WACV / Infrared Physics & Technology publications
+> **Production-grade LLM platform** for clinical knowledge retrieval, multi-agent reasoning, and AI safety — built on medical imaging research with 5 published papers.
 
 [![Python](https://img.shields.io/badge/Python-3.11-blue)](https://python.org)
 [![LangGraph](https://img.shields.io/badge/LangGraph-1.1-green)](https://langchain.com)
-[![Qdrant](https://img.shields.io/badge/Qdrant-Vector_DB-orange)](https://qdrant.tech)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688)](https://fastapi.tiangolo.com)
+[![Qdrant](https://img.shields.io/badge/Qdrant-VectorDB-orange)](https://qdrant.tech)
+[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 ---
 
-## 7 Production Demos
-
-### Demo 1 — RAG Pipeline with Reranker
-**Files:** `rag_my_research.py`, `rag_with_reranker.py`
-
-| Metric | Baseline | + Query Rewriting | + Reranker |
-|--------|----------|-------------------|------------|
-| Faithfulness | 0.52 | 0.84 | 0.71 |
-| Answer Relevancy | 0.66 | 0.95 | **0.98** |
-| Context Recall | 0.00 | **1.00** | **1.00** |
-
-- Multi-query rewriting generates 3 search variants per question
-- Cross-encoder reranker (`ms-marco-MiniLM-L-6-v2`) for precision
-- Evaluated with RAGAS framework
-
-### Demo 2 — Multi-Agent System (LangGraph)
-**File:** `multi_agent_research.py`
+## Architecture
 ```
-Question → RAG Agent → Draft Agent → Critique Agent → Synthesis Agent → Answer
+                    ┌─────────────────────────────────────────┐
+                    │         REST API (FastAPI)               │
+                    │  POST /query  GET /health  GET /metrics  │
+                    └──────────────────┬──────────────────────┘
+                                       │
+                    ┌──────────────────▼──────────────────────┐
+                    │           7-Layer Guardrails             │
+                    │  Injection → PII → Profanity → Topic     │
+                    └──────────────────┬──────────────────────┘
+                                       │
+               ┌───────────────────────▼───────────────────────┐
+               │            LangGraph Multi-Agent DAG           │
+               │  ┌─────────┐  ┌───────┐  ┌───────────────┐   │
+               │  │RAG Agent│→ │ Draft │→ │   Critique    │   │
+               │  │(Qdrant) │  │ Agent │  │    Agent      │   │
+               │  └─────────┘  └───────┘  └──────┬────────┘   │
+               │                                  │            │
+               │                        ┌─────────▼──────┐    │
+               │                        │Synthesis Agent │    │
+               │                        └────────────────┘    │
+               └───────────────────────────────────────────────┘
+                                       │
+                    ┌──────────────────▼──────────────────────┐
+                    │           LLM Monitoring                 │
+                    │  Hallucination · Drift · Latency · Logs  │
+                    └─────────────────────────────────────────┘
 ```
-- 4-node LangGraph DAG with self-correction loop
-- Critique agent evaluates factuality before synthesis
-- Tested on 5 published research papers
 
-### Demo 3 — QLoRA Fine-tuning
-**Files:** `finetune_qlora.py`, `generate_finetune_dataset.py`
+---
 
-| Config | Value |
-|--------|-------|
-| Base model | Qwen2.5-1.5B-Instruct |
-| Method | QLoRA (4-bit NF4) |
-| Trainable params | 4.36M / 1.55B (0.28%) |
-| Training loss | 5.66 → 3.98 |
-| Hardware | RTX 3090 24GB |
+## Key Results
 
-### Demo 4 — Production LLM Monitoring
-**File:** `llm_monitoring.py`
+| Component | Metric | Value |
+|-----------|--------|-------|
+| RAG Pipeline | Answer Relevancy | **0.98** |
+| RAG Pipeline | Context Recall | **1.00** |
+| RAG Pipeline | Faithfulness | **0.84** |
+| Guardrails | Injection Block Rate | **100%** |
+| API | Avg Latency | 2150ms |
+| API | P95 Latency | 2593ms |
+| Fine-tuning | Training Loss | 5.66 → **3.98** |
+| Fine-tuning | Trainable Params | **0.28%** (4.36M / 1.55B) |
 
-- Real-time hallucination detection (LLM-as-judge)
-- Retrieval drift detection with baseline comparison
-- Latency tracking: avg 1853ms, P95 2593ms
-- SQLite logging with alert system
-- Inspired by production MLOps at Flix/Greyhound ($20M revenue impact)
+---
 
-### Demo 5 — GraphRAG Knowledge Graph
-**File:** `graph_rag.py`
+## Components
 
-- Extracts entities and relations from research papers via GPT-4o-mini
-- Builds NetworkX knowledge graph: **39 nodes, 50 edges**
-- Graph traversal retrieval vs vector baseline comparison
-- Multi-hop queries across document collections
+### 1. RAG Pipeline with Reranker (`rag/`)
+- Multi-query rewriting: generates 3 search variants per question
+- Vector retrieval: Qdrant with `all-MiniLM-L6-v2` embeddings
+- Cross-encoder reranking: `ms-marco-MiniLM-L-6-v2` for precision
+- Evaluation: RAGAS framework (Faithfulness, Answer Relevancy, Context Recall)
 
-### Demo 6 — LLM Guardrails & Safety
-**File:** `llm_guardrails.py`
+### 2. Multi-Agent System (`agents/`)
+- 4-node LangGraph DAG: RAG → Draft → Critique → Synthesis
+- Self-correction loop: Critique agent validates factuality before synthesis
+- State management: full conversation history preserved across nodes
 
-- **Input:** Prompt injection detection, PII anonymization, topic relevance filtering
-- **Output:** Hallucination filtering, PII removal, answer quality check
-- 7-layer guardrail pipeline with logging
-- Tested: 2/7 injection attempts correctly blocked
+### 3. QLoRA Fine-tuning (`finetune/`)
+- Base model: Qwen2.5-1.5B-Instruct
+- Method: QLoRA (4-bit NF4, LoRA r=16, alpha=32)
+- Dataset: 50 domain-specific instruction-answer pairs
+- Hardware: RTX 3090 24GB VRAM
 
-### Demo 7 — Research Assistant REST API
-**File:** `research_api.py`
+### 4. LLM Monitoring (`monitoring/`)
+- Hallucination detection: LLM-as-judge scoring
+- Retrieval drift: baseline comparison across sessions
+- Latency tracking: per-query timing with P95 alerts
+- Persistent logging: SQLite with automated anomaly detection
+
+### 5. GraphRAG Knowledge Graph (`graph/`)
+- Entity extraction: GPT-4o-mini relationship mining
+- Graph: NetworkX directed graph — 39 nodes, 50 edges
+- Multi-hop queries: cross-document reasoning
+
+### 6. LLM Guardrails (`guardrails/`)
+- Input: Prompt injection detection, PII anonymization (Presidio), topic relevance
+- Output: Hallucination filter, PII removal, answer quality check
+- 7-layer pipeline with structured logging
+
+### 7. REST API (`api/`)
 ```
-POST /query    → Guardrails → RAG/Agent → Monitoring → Response
-GET  /health   → System health check
-GET  /metrics  → Live monitoring dashboard
-GET  /papers   → Indexed collections
+POST /query   → Guardrails → RAG/Agent → Monitor → Response
+GET  /health  → System health check
+GET  /metrics → Live monitoring dashboard
+GET  /papers  → Indexed paper collections
 ```
-- FastAPI with automatic Swagger docs
-- Integrates all 6 demos into one service
-- Avg latency: 2150ms | Faithfulness: 0.73
+
+---
+
+## Quick Start
+```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Set environment variables
+cp .env.example .env
+# Add your OPENAI_API_KEY
+
+# 3. Start vector database
+docker run -d -p 6333:6333 qdrant/qdrant
+
+# 4. Index research papers
+python rag/my_papers_data.py
+
+# 5. Run RAG evaluation
+python rag/rag_with_reranker.py
+
+# 6. Start API server
+python api/research_api.py
+# Swagger UI: http://localhost:8000/docs
+```
+
+---
+
+## Research Papers Indexed
+
+| # | Paper | Venue | Role |
+|---|-------|-------|------|
+| 1 | SMLP-KAN: Spectral MLP-KAN Diffusion Prior | CVPR Workshop 2026 | First Author |
+| 2 | THAT: Token-wise High-frequency Augmentation Transformer | IEEE SMC 2025 | Co-First Author |
+| 3 | Transformer-based Diffusion & Spectral Priors | IEEE JSTARS 2025 | First Author |
+| 4 | SF-GPT: Spatial-Frequency Guided Pixel Transformer | Infrared P&T 2025 | First Author |
+| 5 | FW-SAT: Flexible Window-based Self-attention Transformer | CVPR Workshop 2024 | First Author |
 
 ---
 
@@ -87,11 +143,11 @@ GET  /papers   → Indexed collections
 
 | Layer | Technology |
 |-------|-----------|
+| LLM | GPT-4o-mini |
+| Agent Framework | LangGraph 1.1 |
 | Vector DB | Qdrant |
 | Embeddings | sentence-transformers/all-MiniLM-L6-v2 |
 | Reranker | cross-encoder/ms-marco-MiniLM-L-6-v2 |
-| LLM | GPT-4o-mini |
-| Agent Framework | LangGraph 1.1 |
 | Fine-tuning | QLoRA, PEFT, TRL |
 | Evaluation | RAGAS |
 | API | FastAPI |
@@ -99,26 +155,13 @@ GET  /papers   → Indexed collections
 | Safety | Presidio, better-profanity |
 | Hardware | RTX 3090 (24GB VRAM) |
 
-## Quick Start
-```bash
-# Start vector DB
-docker run -d -p 6333:6333 qdrant/qdrant
+---
 
-# Load research papers
-python my_papers_data.py
+## Author
 
-# Run RAG evaluation
-python rag_my_research.py
+**Hongcheng Jiang** — PhD ECE, University of Missouri-Kansas City (GPA: 4.0)
 
-# Start API server
-python research_api.py
-# Docs at http://localhost:8000/docs
-```
+9 publications: CVPR · IEEE JSTARS · IEEE SMC · WACV · Infrared Physics & Technology
 
-## Research Papers Indexed
-
-1. **PTST** — Pivotal Token Selective Transformer, Medical Image Super-Resolution (2024)
-2. **SF-GPT** — Spatial-Frequency Guided Pixel Transformer, NIR-to-RGB (Infrared Physics & Technology, 2025)
-3. **SMLP-KAN** — Diffusion-based Hyperspectral Restoration, 40x compression (CVPR Workshop 2026)
-4. **HAT** — Hybrid Attention Transformer, Thermal Super-Resolution (CVPR Workshop, 2024)
-5. **Pansharpening** — Spectral Diffusion Priors (WACV Workshop, 2025)
+[![GitHub](https://img.shields.io/badge/GitHub-jianghongcheng-black)](https://github.com/jianghongcheng)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue)](https://www.linkedin.com/in/hongcheng-jiang-a31860181)
