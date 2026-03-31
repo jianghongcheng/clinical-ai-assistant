@@ -7,288 +7,170 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #0f0f0f;
-      color: #e0e0e0;
-      min-height: 100vh;
-    }
-
-    /* Header */
-    .header {
-      background: #1a1a1a;
-      border-bottom: 1px solid #2a2a2a;
-      padding: 16px 32px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .header-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #fff;
-      letter-spacing: -0.3px;
-    }
-    .header-subtitle {
-      font-size: 12px;
-      color: #666;
-      margin-top: 2px;
-    }
-    .status-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: #4caf50;
-      display: inline-block;
-      margin-right: 6px;
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; min-height: 100vh; }
+    .header { background: #1a1a1a; border-bottom: 1px solid #2a2a2a; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .header-title { font-size: 18px; font-weight: 600; color: #fff; }
+    .header-subtitle { font-size: 12px; color: #666; margin-top: 2px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #4caf50; display: inline-block; margin-right: 6px; }
     .status-text { font-size: 12px; color: #888; }
-
-    /* Layout */
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 32px 24px;
-      display: grid;
-      grid-template-columns: 1fr 320px;
-      gap: 24px;
-    }
-
-    /* Card */
-    .card {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 8px;
-      padding: 24px;
-    }
-    .card-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 16px;
-    }
-
-    /* Chat area */
+    .container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; display: grid; grid-template-columns: 1fr 340px; gap: 24px; }
+    .card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 24px; }
+    .card-title { font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 16px; }
     .chat-container { display: flex; flex-direction: column; gap: 24px; }
-
-    .messages {
-      min-height: 400px;
-      max-height: 500px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      padding: 4px 0;
-    }
+    .messages { min-height: 400px; max-height: 500px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding: 4px 0; }
     .messages::-webkit-scrollbar { width: 4px; }
-    .messages::-webkit-scrollbar-track { background: transparent; }
     .messages::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-
     .message { display: flex; flex-direction: column; gap: 6px; }
     .message.user { align-items: flex-end; }
     .message.assistant { align-items: flex-start; }
-
-    .message-bubble {
-      max-width: 80%;
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-size: 14px;
-      line-height: 1.6;
-    }
-    .message.user .message-bubble {
-      background: #2a2a2a;
-      color: #e0e0e0;
-      border: 1px solid #333;
-    }
-    .message.assistant .message-bubble {
-      background: #1e1e1e;
-      color: #d0d0d0;
-      border: 1px solid #2a2a2a;
-    }
-
-    .message-meta {
-      font-size: 11px;
-      color: #555;
-      display: flex;
-      gap: 12px;
-    }
-    .badge {
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 500;
-    }
-    .badge-blocked { background: #3a1a1a; color: #f44336; border: 1px solid #5a2a2a; }
-    .badge-ok { background: #1a2a1a; color: #4caf50; border: 1px solid #2a4a2a; }
-    .badge-faith { background: #1a1a2a; color: #7986cb; border: 1px solid #2a2a4a; }
-
-    .sources {
-      margin-top: 8px;
-      padding: 10px 12px;
-      background: #151515;
-      border: 1px solid #252525;
-      border-radius: 6px;
-    }
-    .sources-title { font-size: 11px; color: #555; margin-bottom: 6px; }
-    .source-item { font-size: 12px; color: #666; padding: 3px 0; }
-    .source-venue { color: #444; }
-
-    /* Input */
-    .input-area { display: flex; gap: 8px; }
-    .input-field {
-      flex: 1;
-      background: #141414;
-      border: 1px solid #2a2a2a;
-      border-radius: 6px;
-      padding: 12px 16px;
-      font-size: 14px;
-      color: #e0e0e0;
-      outline: none;
-      transition: border-color 0.2s;
-    }
+    .message-bubble { max-width: 80%; padding: 12px 16px; border-radius: 8px; font-size: 14px; line-height: 1.6; }
+    .message.user .message-bubble { background: #2a2a2a; color: #e0e0e0; }
+    .message.assistant .message-bubble { background: #1e2a1e; border: 1px solid #2a3a2a; color: #c8e6c9; }
+    .message-meta { font-size: 11px; color: #555; display: flex; gap: 12px; }
+    .input-area { display: flex; gap: 12px; }
+    .input-field { flex: 1; background: #141414; border: 1px solid #2a2a2a; border-radius: 6px; padding: 12px 16px; font-size: 14px; color: #e0e0e0; outline: none; }
     .input-field:focus { border-color: #444; }
-    .input-field::placeholder { color: #444; }
-
-    .btn {
-      padding: 12px 20px;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-primary {
-      background: #e0e0e0;
-      color: #0f0f0f;
-    }
-    .btn-primary:hover { background: #fff; }
-    .btn-primary:disabled { background: #333; color: #666; cursor: not-allowed; }
-    .btn-secondary {
-      background: transparent;
-      color: #666;
-      border: 1px solid #2a2a2a;
-    }
-    .btn-secondary:hover { border-color: #444; color: #888; }
-
-    /* Suggestions */
-    .suggestions { display: flex; flex-wrap: wrap; gap: 8px; }
-    .suggestion {
-      padding: 7px 14px;
-      background: #141414;
-      border: 1px solid #2a2a2a;
-      border-radius: 20px;
-      font-size: 12px;
-      color: #888;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .suggestion:hover { border-color: #444; color: #bbb; background: #1a1a1a; }
-
-    /* Right sidebar */
+    .btn-send { background: #e0e0e0; color: #0f0f0f; border: none; border-radius: 6px; padding: 12px 24px; font-size: 14px; font-weight: 500; cursor: pointer; }
+    .btn-send:hover { background: #fff; }
+    .btn-send:disabled { background: #333; color: #666; cursor: not-allowed; }
+    .suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+    .suggestion { padding: 6px 12px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 20px; font-size: 12px; color: #888; cursor: pointer; }
+    .suggestion:hover { border-color: #444; color: #ccc; }
+    .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; gap: 12px; padding: 40px; }
+    .empty-icon { font-size: 48px; }
+    .empty-text { font-size: 14px; text-align: center; line-height: 1.6; }
     .sidebar { display: flex; flex-direction: column; gap: 16px; }
 
-    /* Upload */
-    .upload-area {
-      border: 1px dashed #2a2a2a;
-      border-radius: 6px;
-      padding: 24px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .upload-area:hover { border-color: #444; background: #141414; }
-    .upload-icon { font-size: 28px; margin-bottom: 8px; }
-    .upload-text { font-size: 13px; color: #666; }
-    .upload-hint { font-size: 11px; color: #444; margin-top: 4px; }
-    input[type="file"] { display: none; }
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+    .tab { padding: 6px 14px; border-radius: 4px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid #2a2a2a; color: #666; background: transparent; }
+    .tab.active { background: #2a2a2a; color: #e0e0e0; border-color: #444; }
 
     /* Metrics */
-    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .metric-item { padding: 12px; background: #141414; border-radius: 6px; border: 1px solid #222; }
+    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .metric-item { padding: 12px; background: #141414; border: 1px solid #222; border-radius: 6px; }
     .metric-value { font-size: 20px; font-weight: 600; color: #e0e0e0; }
     .metric-label { font-size: 11px; color: #555; margin-top: 2px; }
+    .btn-refresh { width: 100%; margin-top: 12px; padding: 8px; background: transparent; border: 1px solid #2a2a2a; border-radius: 6px; color: #666; font-size: 12px; cursor: pointer; }
+    .btn-refresh:hover { border-color: #444; color: #aaa; }
 
-    /* Papers list */
-    .papers-list { display: flex; flex-direction: column; gap: 8px; }
-    .paper-item {
-      padding: 10px 12px;
-      background: #141414;
-      border: 1px solid #222;
-      border-radius: 6px;
-    }
+    /* Papers */
+    .paper-item { padding: 10px 12px; background: #141414; border: 1px solid #222; border-radius: 6px; margin-bottom: 6px; }
     .paper-title { font-size: 12px; color: #c0c0c0; line-height: 1.4; }
     .paper-venue { font-size: 11px; color: #555; margin-top: 3px; }
 
-    /* Loading spinner */
-    .spinner {
-      display: inline-block;
-      width: 14px; height: 14px;
-      border: 2px solid #333;
-      border-top-color: #888;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      margin-right: 8px;
-      vertical-align: middle;
-    }
+    /* Upload */
+    .upload-area { border: 1px dashed #2a2a2a; border-radius: 6px; padding: 24px; text-align: center; cursor: pointer; }
+    .upload-area:hover { border-color: #444; background: #141414; }
+    .upload-icon { font-size: 32px; margin-bottom: 8px; }
+    .upload-text { font-size: 13px; color: #666; }
+    .upload-hint { font-size: 11px; color: #444; margin-top: 4px; }
+
+    /* Graph */
+    .graph-container { width: 100%; height: 280px; background: #0a0a0a; border-radius: 6px; border: 1px solid #222; overflow: hidden; position: relative; }
+    .graph-stats { display: flex; gap: 12px; margin-top: 10px; }
+    .graph-stat { font-size: 11px; color: #555; }
+    .graph-stat span { color: #888; }
+    .graph-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #555; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .node-tooltip { position: absolute; background: #1a1a1a; border: 1px solid #333; padding: 6px 10px; border-radius: 4px; font-size: 11px; color: #ccc; pointer-events: none; z-index: 10; }
+    .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid #333; border-top-color: #888; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 6px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Typing indicator */
-    .typing { display: flex; gap: 4px; padding: 12px 16px; }
-    .typing span {
-      width: 6px; height: 6px;
-      background: #444;
-      border-radius: 50%;
-      animation: bounce 1.2s infinite;
-    }
-    .typing span:nth-child(2) { animation-delay: 0.2s; }
-    .typing span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes bounce {
-      0%, 80%, 100% { transform: translateY(0); }
-      40% { transform: translateY(-6px); }
-    }
-
-    /* Toast */
-    .toast {
-      position: fixed;
-      bottom: 24px; right: 24px;
-      padding: 12px 20px;
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 6px;
-      font-size: 13px;
-      color: #e0e0e0;
-      z-index: 1000;
-      animation: slideIn 0.3s ease;
-    }
-    .toast.success { border-color: #2a4a2a; color: #4caf50; }
-    .toast.error { border-color: #5a2a2a; color: #f44336; }
-    @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-    .empty-state { text-align: center; padding: 60px 20px; color: #444; }
-    .empty-icon { font-size: 40px; margin-bottom: 12px; }
-    .empty-text { font-size: 14px; }
   </style>
 </head>
 <body>
   <div id="root"></div>
-
   <script type="text/babel">
-    const API_BASE = window.location.origin === 'http://localhost:3000'
-      ? 'http://localhost:8000'
-      : window.location.origin;
+    const API = 'http://localhost:8000';
+    const GROUP_COLORS = {
+      technique: '#64b5f6',
+      domain: '#81c784',
+      tool: '#ffb74d',
+      model: '#ce93d8',
+      problem: '#ef9a9a'
+    };
 
-    const SUGGESTIONS = [
-      "What is SMLP-KAN's main contribution?",
-      "Compare PSNR across all papers",
-      "How does uTDSP achieve efficiency?",
-      "What is PTSA in THAT?",
-      "Explain FW-SAT architecture",
-    ];
+    function GraphViz({ data }) {
+      const svgRef = React.useRef(null);
+      const tooltipRef = React.useRef(null);
+
+      React.useEffect(() => {
+        if (!data || !svgRef.current) return;
+        const svg = d3.select(svgRef.current);
+        svg.selectAll("*").remove();
+
+        const w = svgRef.current.clientWidth || 300;
+        const h = 280;
+
+        const simulation = d3.forceSimulation(data.nodes)
+          .force("link", d3.forceLink(data.links).id(d => d.id).distance(60))
+          .force("charge", d3.forceManyBody().strength(-120))
+          .force("center", d3.forceCenter(w / 2, h / 2))
+          .force("collision", d3.forceCollide().radius(d => d.size * 0.8));
+
+        const link = svg.append("g")
+          .selectAll("line")
+          .data(data.links)
+          .join("line")
+          .attr("stroke", "#2a2a2a")
+          .attr("stroke-width", d => d.value * 0.6)
+          .attr("stroke-opacity", 0.8);
+
+        const node = svg.append("g")
+          .selectAll("g")
+          .data(data.nodes)
+          .join("g")
+          .call(d3.drag()
+            .on("start", (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+            .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
+            .on("end", (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }));
+
+        node.append("circle")
+          .attr("r", d => d.size * 0.55)
+          .attr("fill", d => GROUP_COLORS[d.group] || '#888')
+          .attr("fill-opacity", 0.85)
+          .attr("stroke", d => GROUP_COLORS[d.group] || '#888')
+          .attr("stroke-width", 1.5)
+          .attr("stroke-opacity", 0.4);
+
+        node.append("text")
+          .attr("text-anchor", "middle")
+          .attr("dy", d => d.size * 0.55 + 11)
+          .attr("font-size", "9px")
+          .attr("fill", "#888")
+          .text(d => d.id.length > 12 ? d.id.slice(0, 11) + '…' : d.id);
+
+        node.on("mouseover", (e, d) => {
+          const tooltip = tooltipRef.current;
+          if (tooltip) {
+            tooltip.style.display = 'block';
+            tooltip.style.left = (e.offsetX + 12) + 'px';
+            tooltip.style.top = (e.offsetY - 10) + 'px';
+            tooltip.textContent = `${d.id} (${d.group})`;
+          }
+        }).on("mouseout", () => {
+          if (tooltipRef.current) tooltipRef.current.style.display = 'none';
+        });
+
+        simulation.on("tick", () => {
+          link
+            .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+          node.attr("transform", d => `translate(${Math.max(15, Math.min(w-15, d.x))},${Math.max(15, Math.min(h-15, d.y))})`);
+        });
+      }, [data]);
+
+      return (
+        <div style={{position:'relative'}}>
+          <svg ref={svgRef} width="100%" height="280" style={{display:'block'}}></svg>
+          <div ref={tooltipRef} className="node-tooltip" style={{display:'none'}}></div>
+        </div>
+      );
+    }
 
     function App() {
       const [messages, setMessages] = React.useState([]);
@@ -296,123 +178,100 @@
       const [loading, setLoading] = React.useState(false);
       const [metrics, setMetrics] = React.useState(null);
       const [papers, setPapers] = React.useState([]);
-      const [toast, setToast] = React.useState(null);
-      const [uploading, setUploading] = React.useState(false);
+      const [graphData, setGraphData] = React.useState(null);
+      const [sidebarTab, setSidebarTab] = React.useState('metrics');
       const messagesEndRef = React.useRef(null);
-      const fileInputRef = React.useRef(null);
+
+      const SUGGESTIONS = [
+        "What are LLM challenges in radiology?",
+        "How does RAG improve clinical AI?",
+        "What is GraphRAG?",
+        "Explain QLoRA fine-tuning",
+        "What is RAGAS evaluation?"
+      ];
 
       React.useEffect(() => {
         fetchMetrics();
         fetchPapers();
+        fetchGraph();
       }, []);
 
       React.useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, [messages]);
 
-      const showToast = (msg, type = 'success') => {
-        setToast({ msg, type });
-        setTimeout(() => setToast(null), 3000);
-      };
-
       const fetchMetrics = async () => {
-        try {
-          const r = await fetch(`${API_BASE}/metrics`);
-          const d = await r.json();
-          setMetrics(d);
-        } catch {}
+        try { const r = await fetch(`${API}/metrics`); setMetrics(await r.json()); } catch {}
       };
-
       const fetchPapers = async () => {
-        try {
-          const r = await fetch(`${API_BASE}/papers`);
-          const d = await r.json();
-          setPapers(d.papers || []);
-        } catch {}
+        try { const r = await fetch(`${API}/papers`); const d = await r.json(); setPapers(d.papers || []); } catch {}
+      };
+      const fetchGraph = async () => {
+        try { const r = await fetch(`${API}/graph`); setGraphData(await r.json()); } catch {}
       };
 
-      const handleSubmit = async (q = null) => {
+      const sendMessage = async (q) => {
         const question = q || input.trim();
         if (!question || loading) return;
         setInput('');
-        setLoading(true);
-
         setMessages(prev => [...prev, { role: 'user', content: question }]);
-
+        setLoading(true);
         try {
-          const r = await fetch(`${API_BASE}/query`, {
+          const r = await fetch(`${API}/query`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ question })
           });
-          const d = await r.json();
+          const data = await r.json();
           setMessages(prev => [...prev, {
             role: 'assistant',
-            content: d.answer,
-            sources: d.sources || [],
-            latency_ms: d.latency_ms,
-            faithfulness: d.faithfulness,
-            blocked: d.blocked,
-            block_reason: d.block_reason
+            content: data.blocked ? `🛡️ Blocked: ${data.block_reason}` : data.answer,
+            latency: data.latency_ms,
+            faithfulness: data.faithfulness,
+            sources: data.sources || [],
+            blocked: data.blocked
           }]);
           fetchMetrics();
         } catch (e) {
-          setMessages(prev => [...prev, {
-            role: 'assistant',
-            content: 'Connection error. Make sure the API is running on port 8000.',
-            sources: [], blocked: false
-          }]);
+          setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${e.message}` }]);
         }
         setLoading(false);
       };
 
-      const handleUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        setUploading(true);
-        const formData = new FormData();
-        formData.append('file', file);
+      const handleUpload = async (file) => {
+        if (!file || !file.name.endsWith('.pdf')) return;
+        const fd = new FormData();
+        fd.append('file', file);
         try {
-          const r = await fetch(`${API_BASE}/upload`, { method: 'POST', body: formData });
+          const r = await fetch(`${API}/upload`, { method: 'POST', body: fd });
           const d = await r.json();
-          showToast(`✓ ${d.message}`, 'success');
+          setMessages(prev => [...prev, { role: 'assistant', content: `✅ ${d.message}` }]);
           fetchPapers();
-          fetchMetrics();
         } catch (e) {
-          showToast('Upload failed', 'error');
+          setMessages(prev => [...prev, { role: 'assistant', content: `❌ Upload failed: ${e.message}` }]);
         }
-        setUploading(false);
-        e.target.value = '';
       };
 
       return (
         <div>
-          {/* Header */}
           <div className="header">
             <div>
               <div className="header-title">Clinical AI Research Assistant</div>
-              <div className="header-subtitle">RAG · Multi-Agent · Guardrails · Monitoring</div>
+              <div className="header-subtitle">RAG · GraphRAG · Multi-Agent · Guardrails · LLM Monitoring</div>
             </div>
-            <div className="status-text">
-              <span className="status-dot"></span>
-              {metrics ? `${metrics.papers_indexed || papers.length} papers indexed` : 'Connecting...'}
-            </div>
+            <div><span className="status-dot"></span><span className="status-text">API Connected</span></div>
           </div>
 
           <div className="container">
             {/* Main chat */}
-            <div className="chat-container">
-              <div className="card">
-                <div className="card-title">Research Query</div>
-
-                {/* Suggestions */}
-                <div className="suggestions" style={{marginBottom: 20}}>
-                  {SUGGESTIONS.map((s, i) => (
-                    <div key={i} className="suggestion" onClick={() => handleSubmit(s)}>{s}</div>
+            <div className="card">
+              <div className="card-title">Research Query</div>
+              <div className="chat-container">
+                <div className="suggestions">
+                  {SUGGESTIONS.map(s => (
+                    <span key={s} className="suggestion" onClick={() => sendMessage(s)}>{s}</span>
                   ))}
                 </div>
-
-                {/* Messages */}
                 <div className="messages">
                   {messages.length === 0 && (
                     <div className="empty-state">
@@ -423,60 +282,34 @@
                   {messages.map((m, i) => (
                     <div key={i} className={`message ${m.role}`}>
                       <div className="message-bubble">{m.content}</div>
-                      {m.role === 'assistant' && (
+                      {m.role === 'assistant' && !m.blocked && m.latency && (
                         <div className="message-meta">
-                          {m.blocked
-                            ? <span className="badge badge-blocked">⛔ {m.block_reason}</span>
-                            : <span className="badge badge-ok">✓ Passed guardrails</span>
-                          }
-                          {m.latency_ms && <span>{Math.round(m.latency_ms)}ms</span>}
-                          {m.faithfulness > 0 && (
-                            <span className="badge badge-faith">
-                              faithfulness {(m.faithfulness * 100).toFixed(0)}%
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      {m.sources && m.sources.length > 0 && (
-                        <div className="sources">
-                          <div className="sources-title">Sources</div>
-                          {m.sources.map((s, j) => (
-                            <div key={j} className="source-item">
-                              {s.title?.substring(0, 60)}... <span className="source-venue">— {s.venue}</span>
-                            </div>
-                          ))}
+                          <span>⏱ {Math.round(m.latency)}ms</span>
+                          {m.faithfulness > 0 && <span>🎯 faithfulness {m.faithfulness?.toFixed(2)}</span>}
+                          {m.sources?.length > 0 && <span>📚 {m.sources.length} sources</span>}
                         </div>
                       )}
                     </div>
                   ))}
                   {loading && (
                     <div className="message assistant">
-                      <div className="message-bubble">
-                        <div className="typing">
-                          <span></span><span></span><span></span>
-                        </div>
-                      </div>
+                      <div className="message-bubble"><span className="spinner"></span>Thinking...</div>
                     </div>
                   )}
                   <div ref={messagesEndRef} />
                 </div>
-
-                {/* Input */}
-                <div className="input-area" style={{marginTop: 16}}>
+                <div className="input-area">
                   <input
                     className="input-field"
                     value={input}
                     onChange={e => setInput(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                    placeholder="Ask about SMLP-KAN, uTDSP, THAT, SF-GPT, FW-SAT..."
+                    onKeyDown={e => e.key === 'Enter' && sendMessage()}
+                    placeholder="Ask about clinical AI, RAG, LLM radiology..."
                     disabled={loading}
                   />
-                  <button className="btn btn-primary" onClick={() => handleSubmit()} disabled={loading || !input.trim()}>
-                    {loading ? <><span className="spinner"></span>Thinking</> : 'Send'}
+                  <button className="btn-send" onClick={() => sendMessage()} disabled={loading || !input.trim()}>
+                    Send
                   </button>
-                  {messages.length > 0 && (
-                    <button className="btn btn-secondary" onClick={() => setMessages([])}>Clear</button>
-                  )}
                 </div>
               </div>
             </div>
@@ -486,56 +319,87 @@
               {/* Upload */}
               <div className="card">
                 <div className="card-title">Upload PDF</div>
-                <input ref={fileInputRef} type="file" accept=".pdf" onChange={handleUpload} />
-                <div className="upload-area" onClick={() => fileInputRef.current.click()}>
-                  <div className="upload-icon">{uploading ? '⏳' : '📄'}</div>
-                  <div className="upload-text">{uploading ? 'Processing...' : 'Click to upload'}</div>
+                <div className="upload-area" onClick={() => document.getElementById('pdf-upload').click()}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => { e.preventDefault(); handleUpload(e.dataTransfer.files[0]); }}>
+                  <input id="pdf-upload" type="file" accept=".pdf" style={{display:'none'}} onChange={e => handleUpload(e.target.files[0])} />
+                  <div className="upload-icon">📄</div>
+                  <div className="upload-text">Click to upload</div>
                   <div className="upload-hint">PDF files only • Max 10MB</div>
                 </div>
               </div>
 
-              {/* Metrics */}
+              {/* Tabs card */}
               <div className="card">
-                <div className="card-title">Live Metrics</div>
-                <div className="metrics-grid">
-                  <div className="metric-item">
-                    <div className="metric-value">{metrics?.total_queries ?? '—'}</div>
-                    <div className="metric-label">Queries</div>
-                  </div>
-                  <div className="metric-item">
-                    <div className="metric-value">{metrics?.avg_latency_ms ? `${Math.round(metrics.avg_latency_ms)}ms` : '—'}</div>
-                    <div className="metric-label">Avg Latency</div>
-                  </div>
-                  <div className="metric-item">
-                    <div className="metric-value">{metrics?.avg_faithfulness ? (metrics.avg_faithfulness * 100).toFixed(0) + '%' : '—'}</div>
-                    <div className="metric-label">Faithfulness</div>
-                  </div>
-                  <div className="metric-item">
-                    <div className="metric-value">{metrics?.blocked_count ?? '—'}</div>
-                    <div className="metric-label">Blocked</div>
-                  </div>
-                </div>
-                <button className="btn btn-secondary" style={{width:'100%', marginTop:12, fontSize:12}} onClick={fetchMetrics}>
-                  Refresh
-                </button>
-              </div>
-
-              {/* Papers */}
-              <div className="card">
-                <div className="card-title">Indexed Papers ({papers.length})</div>
-                <div className="papers-list">
-                  {papers.map((p, i) => (
-                    <div key={i} className="paper-item">
-                      <div className="paper-title">{p.title?.substring(0, 70)}...</div>
-                      <div className="paper-venue">{p.venue}</div>
-                    </div>
+                <div className="tabs">
+                  {['metrics', 'graph', 'papers'].map(t => (
+                    <button key={t} className={`tab ${sidebarTab === t ? 'active' : ''}`} onClick={() => setSidebarTab(t)}>
+                      {t === 'metrics' ? '📊 Metrics' : t === 'graph' ? '🕸 Graph' : '📚 Papers'}
+                    </button>
                   ))}
                 </div>
+
+                {sidebarTab === 'metrics' && (
+                  <div>
+                    <div className="metrics-grid">
+                      <div className="metric-item">
+                        <div className="metric-value">{metrics?.total_queries ?? 0}</div>
+                        <div className="metric-label">Queries</div>
+                      </div>
+                      <div className="metric-item">
+                        <div className="metric-value">{metrics?.avg_latency_ms ? `${Math.round(metrics.avg_latency_ms)}ms` : '—'}</div>
+                        <div className="metric-label">Avg Latency</div>
+                      </div>
+                      <div className="metric-item">
+                        <div className="metric-value">{metrics?.avg_faithfulness ? metrics.avg_faithfulness.toFixed(2) : '—'}</div>
+                        <div className="metric-label">Faithfulness</div>
+                      </div>
+                      <div className="metric-item">
+                        <div className="metric-value">{metrics?.blocked_count ?? 0}</div>
+                        <div className="metric-label">Blocked</div>
+                      </div>
+                    </div>
+                    <button className="btn-refresh" onClick={fetchMetrics}>Refresh</button>
+                  </div>
+                )}
+
+                {sidebarTab === 'graph' && (
+                  <div>
+                    <div className="graph-container">
+                      {graphData ? <GraphViz data={graphData} /> : <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100%',color:'#444',fontSize:13}}>Loading graph...</div>}
+                    </div>
+                    {graphData?.stats && (
+                      <div className="graph-stats">
+                        <div className="graph-stat">Nodes: <span>{graphData.stats.nodes}</span></div>
+                        <div className="graph-stat">Edges: <span>{graphData.stats.edges}</span></div>
+                        <div className="graph-stat">Model: <span>{graphData.stats.extraction_model}</span></div>
+                      </div>
+                    )}
+                    <div className="graph-legend">
+                      {Object.entries(GROUP_COLORS).map(([group, color]) => (
+                        <div key={group} className="legend-item">
+                          <div className="legend-dot" style={{background: color}}></div>
+                          {group}
+                        </div>
+                      ))}
+                    </div>
+                    <button className="btn-refresh" onClick={fetchGraph}>Refresh Graph</button>
+                  </div>
+                )}
+
+                {sidebarTab === 'papers' && (
+                  <div style={{maxHeight: 320, overflowY: 'auto'}}>
+                    {papers.map((p, i) => (
+                      <div key={i} className="paper-item">
+                        <div className="paper-title">{p.title}</div>
+                        <div className="paper-venue">{p.venue}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
-
-          {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
         </div>
       );
     }

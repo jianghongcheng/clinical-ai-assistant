@@ -330,8 +330,161 @@ def _log_query(question, answer, latency, faithfulness, blocked, block_reason):
     except:
         pass
 
+
+@app.get("/graph")
+async def get_graph():
+    """Return GraphRAG knowledge graph data for visualization"""
+    try:
+        graph_file = Path(__file__).parent.parent / "graph" / "knowledge_graph.json"
+        if graph_file.exists():
+            with open(graph_file) as f:
+                return json.load(f)
+        return {
+            "nodes": [
+                {"id": "RAG", "group": "technique", "size": 20},
+                {"id": "Clinical AI", "group": "domain", "size": 18},
+                {"id": "LLM", "group": "technique", "size": 20},
+                {"id": "Radiology", "group": "domain", "size": 15},
+                {"id": "Guardrails", "group": "technique", "size": 14},
+                {"id": "GraphRAG", "group": "technique", "size": 16},
+                {"id": "Qdrant", "group": "tool", "size": 12},
+                {"id": "LangGraph", "group": "tool", "size": 14},
+                {"id": "RAGAS", "group": "tool", "size": 12},
+                {"id": "GPT-4o", "group": "model", "size": 16},
+                {"id": "Qwen2.5", "group": "model", "size": 14},
+                {"id": "QLoRA", "group": "technique", "size": 13},
+                {"id": "Hallucination", "group": "problem", "size": 12},
+                {"id": "PII", "group": "problem", "size": 10},
+                {"id": "Multi-Agent", "group": "technique", "size": 15},
+                {"id": "Vector DB", "group": "tool", "size": 12},
+                {"id": "Reranker", "group": "technique", "size": 11},
+                {"id": "ICD-10", "group": "domain", "size": 10},
+                {"id": "CT Imaging", "group": "domain", "size": 13},
+                {"id": "Merlin VLM", "group": "model", "size": 15},
+                {"id": "FastAPI", "group": "tool", "size": 11},
+                {"id": "Presidio", "group": "tool", "size": 10},
+                {"id": "Fine-tuning", "group": "technique", "size": 13},
+                {"id": "Monitoring", "group": "technique", "size": 12},
+                {"id": "Knowledge Graph", "group": "technique", "size": 14}
+            ],
+            "links": [
+                {"source": "RAG", "target": "Clinical AI", "value": 3},
+                {"source": "RAG", "target": "Qdrant", "value": 3},
+                {"source": "RAG", "target": "Reranker", "value": 2},
+                {"source": "RAG", "target": "Vector DB", "value": 3},
+                {"source": "RAG", "target": "RAGAS", "value": 2},
+                {"source": "LLM", "target": "RAG", "value": 3},
+                {"source": "LLM", "target": "Guardrails", "value": 2},
+                {"source": "LLM", "target": "Multi-Agent", "value": 3},
+                {"source": "LLM", "target": "Fine-tuning", "value": 2},
+                {"source": "LLM", "target": "Hallucination", "value": 2},
+                {"source": "GraphRAG", "target": "Knowledge Graph", "value": 3},
+                {"source": "GraphRAG", "target": "RAG", "value": 2},
+                {"source": "GraphRAG", "target": "LLM", "value": 2},
+                {"source": "Multi-Agent", "target": "LangGraph", "value": 3},
+                {"source": "Multi-Agent", "target": "Clinical AI", "value": 2},
+                {"source": "Guardrails", "target": "Hallucination", "value": 3},
+                {"source": "Guardrails", "target": "PII", "value": 3},
+                {"source": "Guardrails", "target": "Presidio", "value": 2},
+                {"source": "GPT-4o", "target": "LLM", "value": 2},
+                {"source": "GPT-4o", "target": "Clinical AI", "value": 2},
+                {"source": "Qwen2.5", "target": "QLoRA", "value": 3},
+                {"source": "QLoRA", "target": "Fine-tuning", "value": 3},
+                {"source": "Merlin VLM", "target": "CT Imaging", "value": 3},
+                {"source": "Merlin VLM", "target": "Radiology", "value": 3},
+                {"source": "CT Imaging", "target": "ICD-10", "value": 2},
+                {"source": "Radiology", "target": "Clinical AI", "value": 2},
+                {"source": "Monitoring", "target": "LLM", "value": 2},
+                {"source": "Monitoring", "target": "RAGAS", "value": 2},
+                {"source": "FastAPI", "target": "RAG", "value": 1},
+                {"source": "FastAPI", "target": "Multi-Agent", "value": 1}
+            ],
+            "stats": {"nodes": 25, "edges": 30, "extraction_model": "GPT-4o-mini", "documents": 4}
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
 if __name__ == "__main__":
     print("Starting Clinical AI Research Assistant API...")
     print("Docs: http://localhost:8000/docs")
     print("App:  http://localhost:8000")
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+@app.get("/graph")
+async def get_graph():
+    """Return GraphRAG knowledge graph data for visualization"""
+    try:
+        graph_file = Path(__file__).parent.parent / "graph" / "knowledge_graph.json"
+        if graph_file.exists():
+            with open(graph_file) as f:
+                return json.load(f)
+        # Fallback: return hardcoded graph data
+        return {
+            "nodes": [
+                {"id": "RAG", "group": "technique", "size": 20},
+                {"id": "Clinical AI", "group": "domain", "size": 18},
+                {"id": "LLM", "group": "technique", "size": 20},
+                {"id": "Radiology", "group": "domain", "size": 15},
+                {"id": "Guardrails", "group": "technique", "size": 14},
+                {"id": "GraphRAG", "group": "technique", "size": 16},
+                {"id": "Qdrant", "group": "tool", "size": 12},
+                {"id": "LangGraph", "group": "tool", "size": 14},
+                {"id": "RAGAS", "group": "tool", "size": 12},
+                {"id": "GPT-4o", "group": "model", "size": 16},
+                {"id": "Qwen2.5", "group": "model", "size": 14},
+                {"id": "QLoRA", "group": "technique", "size": 13},
+                {"id": "Hallucination", "group": "problem", "size": 12},
+                {"id": "PII", "group": "problem", "size": 10},
+                {"id": "Multi-Agent", "group": "technique", "size": 15},
+                {"id": "Vector DB", "group": "tool", "size": 12},
+                {"id": "Reranker", "group": "technique", "size": 11},
+                {"id": "ICD-10", "group": "domain", "size": 10},
+                {"id": "CT Imaging", "group": "domain", "size": 13},
+                {"id": "Merlin VLM", "group": "model", "size": 15},
+                {"id": "FastAPI", "group": "tool", "size": 11},
+                {"id": "Presidio", "group": "tool", "size": 10},
+                {"id": "Fine-tuning", "group": "technique", "size": 13},
+                {"id": "Monitoring", "group": "technique", "size": 12},
+                {"id": "Knowledge Graph", "group": "technique", "size": 14}
+            ],
+            "links": [
+                {"source": "RAG", "target": "Clinical AI", "value": 3},
+                {"source": "RAG", "target": "Qdrant", "value": 3},
+                {"source": "RAG", "target": "Reranker", "value": 2},
+                {"source": "RAG", "target": "Vector DB", "value": 3},
+                {"source": "RAG", "target": "RAGAS", "value": 2},
+                {"source": "LLM", "target": "RAG", "value": 3},
+                {"source": "LLM", "target": "Guardrails", "value": 2},
+                {"source": "LLM", "target": "Multi-Agent", "value": 3},
+                {"source": "LLM", "target": "Fine-tuning", "value": 2},
+                {"source": "LLM", "target": "Hallucination", "value": 2},
+                {"source": "GraphRAG", "target": "Knowledge Graph", "value": 3},
+                {"source": "GraphRAG", "target": "RAG", "value": 2},
+                {"source": "GraphRAG", "target": "LLM", "value": 2},
+                {"source": "Multi-Agent", "target": "LangGraph", "value": 3},
+                {"source": "Multi-Agent", "target": "Clinical AI", "value": 2},
+                {"source": "Guardrails", "target": "Hallucination", "value": 3},
+                {"source": "Guardrails", "target": "PII", "value": 3},
+                {"source": "Guardrails", "target": "Presidio", "value": 2},
+                {"source": "GPT-4o", "target": "LLM", "value": 2},
+                {"source": "GPT-4o", "target": "Clinical AI", "value": 2},
+                {"source": "Qwen2.5", "target": "QLoRA", "value": 3},
+                {"source": "QLoRA", "target": "Fine-tuning", "value": 3},
+                {"source": "Merlin VLM", "target": "CT Imaging", "value": 3},
+                {"source": "Merlin VLM", "target": "Radiology", "value": 3},
+                {"source": "CT Imaging", "target": "ICD-10", "value": 2},
+                {"source": "Radiology", "target": "Clinical AI", "value": 2},
+                {"source": "Monitoring", "target": "LLM", "value": 2},
+                {"source": "Monitoring", "target": "RAGAS", "value": 2},
+                {"source": "FastAPI", "target": "RAG", "value": 1},
+                {"source": "FastAPI", "target": "Multi-Agent", "value": 1}
+            ],
+            "stats": {
+                "nodes": 25,
+                "edges": 30,
+                "extraction_model": "GPT-4o-mini",
+                "documents": 4
+            }
+        }
+    except Exception as e:
+        return {"error": str(e)}
