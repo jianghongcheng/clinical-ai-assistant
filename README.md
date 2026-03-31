@@ -1,6 +1,6 @@
 # Clinical AI Research Assistant
 
-> **Production-grade LLM platform** for clinical knowledge retrieval, multi-agent reasoning, and AI safety — built on medical imaging AI research with 5 published papers.
+> **Production-grade LLM platform** for clinical AI knowledge retrieval — indexing radiology AI research papers with RAG, Multi-Agent reasoning, GraphRAG, and 7-layer Guardrails.
 
 [![Python](https://img.shields.io/badge/Python-3.11-blue)](https://python.org)
 [![LangGraph](https://img.shields.io/badge/LangGraph-1.1-green)](https://langchain.com)
@@ -55,8 +55,18 @@
 | API | Avg Latency | 2150ms |
 | API | P95 Latency | 2593ms |
 | Fine-tuning | Training Loss | 5.66 → **3.98** |
-| Fine-tuning | Trainable Params | **0.28%** (4.36M/1.55B) |
 | GraphRAG | Knowledge Graph | **39 nodes / 50 edges** |
+
+---
+
+## Clinical AI Papers Indexed
+
+| # | Paper | Source |
+|---|-------|--------|
+| 1 | LLMs in Radiology: Trends and Trajectories 2025 | JMIR Medical Informatics |
+| 2 | LLM Systematic Review for Radiology Reporting | medRxiv 2025 |
+| 3 | MedTutor: RAG System for Case-Based Medical Education | EMNLP 2025 |
+| 4 | AI in Healthcare: 2025 Year in Review | medRxiv 2026 |
 
 ---
 
@@ -79,9 +89,8 @@
 
 ### 4. LLM Monitoring (`monitoring/`)
 - Hallucination detection (LLM-as-judge)
-- Retrieval drift detection with baseline comparison
-- SQLite persistent logging with automated alerts
-- Avg latency 1853ms, P95 2593ms
+- Retrieval drift detection
+- SQLite persistent logging, avg latency 1853ms, P95 2593ms
 
 ### 5. GraphRAG (`graph/`)
 - GPT-4o-mini entity and relation extraction
@@ -94,9 +103,8 @@
 - 7-layer pipeline, 100% injection block rate
 
 ### 7. REST API + React Frontend (`api/`, `frontend/`)
-- FastAPI with 4 endpoints
-- React UI with PDF upload, chat interface, live metrics
-- Swagger docs at `/docs`
+- FastAPI with 4 endpoints + Swagger docs
+- React UI with PDF upload, chat, live metrics dashboard
 
 ---
 
@@ -109,18 +117,6 @@ python rag/my_papers_data.py
 python api/research_api.py
 # Open http://localhost:8000
 ```
-
----
-
-## Research Papers Indexed
-
-| # | Paper | Venue | Role |
-|---|-------|-------|------|
-| 1 | SMLP-KAN: Spectral MLP-KAN Diffusion Prior | CVPR Workshop 2026 | **First Author** |
-| 2 | THAT: Token-wise High-frequency Augmentation Transformer | IEEE SMC 2025 | **Co-First Author** |
-| 3 | Transformer-based Diffusion & Spectral Priors | IEEE JSTARS 2025 | **First Author** |
-| 4 | SF-GPT: Spatial-Frequency Guided Pixel Transformer | Infrared P&T 2025 | **First Author** |
-| 5 | FW-SAT: Flexible Window-based Self-attention Transformer | CVPR Workshop 2024 | **First Author** |
 
 ---
 
